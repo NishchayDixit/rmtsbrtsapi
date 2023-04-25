@@ -1,11 +1,9 @@
 ﻿using RmtsBrtsApi.App_Code;
 using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Formatting;
@@ -13,11 +11,11 @@ using System.Web.Http;
 
 namespace RmtsBrtsApi.Api
 {
-    public class RmtsController : ApiController
+    public class BrtsController : ApiController
     {
-        #region GetAllRmtsPickupPoints
+        #region GetAllBrtsPickupPoints
         [HttpGet]
-        public HttpResponseMessage GetAllRmtsPickupPoints()
+        public HttpResponseMessage GetAllBrtsPickupPoints()
         {
             try
             {
@@ -25,7 +23,7 @@ namespace RmtsBrtsApi.Api
                 objConn.Open();
                 SqlCommand objCmd = objConn.CreateCommand();
                 objCmd.CommandType = CommandType.StoredProcedure;
-                objCmd.CommandText = @"[dbo].[PR_RMTS_PICKUP_POINT_SELECTALL]";
+                objCmd.CommandText = @"[dbo].[PR_BRTS_PICKUP_POINT_SELECTALL]";
                 SqlDataReader objSDR = objCmd.ExecuteReader();
                 DataTable dt = new DataTable();
                 dt.Load(objSDR);
@@ -40,66 +38,41 @@ namespace RmtsBrtsApi.Api
 
         #endregion
 
-        #region GetAllRmtsRoutes
-        [HttpGet]
-        public HttpResponseMessage GetAllRmtsRoutes()
-        {
-            try
-            {
-                SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["RmtsConnectionString"].ToString().Trim());
-                objConn.Open();
-                SqlCommand objCmd = objConn.CreateCommand();
-                objCmd.CommandType = CommandType.StoredProcedure;
-                objCmd.CommandText = @"[dbo].[PR_RMTS_ROUTE_SELECTALL]";
-                SqlDataReader objSDR = objCmd.ExecuteReader();
-                DataTable dt = new DataTable();
-                dt.Load(objSDR);
-                objConn.Close();
-                return GetResponseResult(dt);
-            }
-            catch (Exception ex)
-            {
-                return GetResponseError(ex);
-            }
-        }
-
-        #endregion
-
-        #region GetRmtsRouteFromTo
+        #region GetBrtsRouteFromTo
         [HttpPost]
-        public HttpResponseMessage GetRmtsRouteFromTo([FromBody] FormDataCollection formBody)
+        public HttpResponseMessage GetBrtsRouteFromTo([FromBody] FormDataCollection formBody)
         {
             try
             {
                 String ErrorMessage = "";
-                SqlString frompickpoint = SqlString.Null;
-                SqlString topickpoint = SqlString.Null;
+                SqlInt32 fromID = SqlInt32.Null;
+                SqlInt32 toID = SqlInt32.Null;
 
-                if(formBody.GetValues("frompickpoint") == null)
+                if (formBody.GetValues("fromID") == null)
                 {
-                    ErrorMessage += "frompickpoint required.";
+                    ErrorMessage += "fromID required.";
                 }
                 else
                 {
-                    frompickpoint = formBody.Get("frompickpoint").ToString().Trim();
+                    fromID = SqlInt32.Parse(formBody.Get("fromID").ToString().Trim());
                 }
 
-                if (formBody.GetValues("topickpoint") == null)
+                if (formBody.GetValues("toID") == null)
                 {
-                    ErrorMessage += "frompickpoint required.";
+                    ErrorMessage += "toID required.";
                 }
                 else
                 {
-                    topickpoint = formBody.Get("topickpoint").ToString().Trim();
+                    toID = SqlInt32.Parse(formBody.Get("toID").ToString().Trim());
                 }
 
                 SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["RmtsConnectionString"].ToString().Trim());
                 objConn.Open();
                 SqlCommand objCmd = objConn.CreateCommand();
                 objCmd.CommandType = CommandType.StoredProcedure;
-                objCmd.CommandText = @"[dbo].[PR_RMTS_GET_ROUTE]";
-                objCmd.Parameters.AddWithValue("@frompickpoint", frompickpoint);
-                objCmd.Parameters.AddWithValue("@topickpoint", topickpoint);
+                objCmd.CommandText = @"[dbo].[PR_BRTS_GET_ROUTE]";
+                objCmd.Parameters.AddWithValue("@fromID", fromID);
+                objCmd.Parameters.AddWithValue("@toID", toID);
                 SqlDataReader objSDR = objCmd.ExecuteReader();
                 DataTable dt = new DataTable();
                 dt.Load(objSDR);
@@ -113,30 +86,41 @@ namespace RmtsBrtsApi.Api
         }
         #endregion
 
-        #region GetRmtsSelectTime
+        #region GetBrtsGetTimings
         [HttpPost]
-        public HttpResponseMessage GetRmtsSelectTime([FromBody] FormDataCollection formBody)
+        public HttpResponseMessage GetBrtsGetTimings([FromBody] FormDataCollection formBody)
         {
             try
             {
                 String ErrorMessage = "";
-                SqlInt32 id = SqlInt32.Null;
+                SqlInt32 fromID = SqlInt32.Null;
+                SqlInt32 toID = SqlInt32.Null;
 
-                if (formBody.GetValues("id") == null)
+                if (formBody.GetValues("fromID") == null)
                 {
-                    ErrorMessage += "id required.";
+                    ErrorMessage += "fromID required.";
                 }
                 else
                 {
-                    id = SqlInt32.Parse(formBody.Get("id").ToString().Trim());
+                    fromID = SqlInt32.Parse(formBody.Get("fromID").ToString().Trim());
+                }
+
+                if (formBody.GetValues("toID") == null)
+                {
+                    ErrorMessage += "toID required.";
+                }
+                else
+                {
+                    toID = SqlInt32.Parse(formBody.Get("toID").ToString().Trim());
                 }
 
                 SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["RmtsConnectionString"].ToString().Trim());
                 objConn.Open();
                 SqlCommand objCmd = objConn.CreateCommand();
                 objCmd.CommandType = CommandType.StoredProcedure;
-                objCmd.CommandText = @"[dbo].[PR_RMTS_SELECT_TIME]";
-                objCmd.Parameters.AddWithValue("@id", id);
+                objCmd.CommandText = @"[dbo].[PR_BRTS_GET_TIMINGS]";
+                objCmd.Parameters.AddWithValue("@fromID", fromID);
+                objCmd.Parameters.AddWithValue("@toID", toID);
                 SqlDataReader objSDR = objCmd.ExecuteReader();
                 DataTable dt = new DataTable();
                 dt.Load(objSDR);
@@ -150,30 +134,52 @@ namespace RmtsBrtsApi.Api
         }
         #endregion
 
-        #region GetRmtsPickupPointRoutewise
+        #region GetBrtsGetTimingsNow
         [HttpPost]
-        public HttpResponseMessage GetRmtsPickupPointRoutewise([FromBody] FormDataCollection formBody)
+        public HttpResponseMessage GetBrtsGetTimingsNow([FromBody] FormDataCollection formBody)
         {
             try
             {
                 String ErrorMessage = "";
-                SqlInt32 id = SqlInt32.Null;
+                SqlInt32 fromID = SqlInt32.Null;
+                SqlInt32 toID = SqlInt32.Null;
+                SqlInt32 time = SqlInt32.Null;
 
-                if (formBody.GetValues("id") == null)
+                if (formBody.GetValues("fromID") == null)
                 {
-                    ErrorMessage += "id required.";
+                    ErrorMessage += "fromID required.";
                 }
                 else
                 {
-                    id = SqlInt32.Parse(formBody.Get("id").ToString().Trim());
+                    fromID = SqlInt32.Parse(formBody.Get("fromID").ToString().Trim());
+                }
+
+                if (formBody.GetValues("toID") == null)
+                {
+                    ErrorMessage += "toID required.";
+                }
+                else
+                {
+                    toID = SqlInt32.Parse(formBody.Get("toID").ToString().Trim());
+                }
+
+                if (formBody.GetValues("time") == null)
+                {
+                    ErrorMessage += "time required.";
+                }
+                else
+                {
+                    time = SqlInt32.Parse(formBody.Get("time").ToString().Trim());
                 }
 
                 SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["RmtsConnectionString"].ToString().Trim());
                 objConn.Open();
                 SqlCommand objCmd = objConn.CreateCommand();
                 objCmd.CommandType = CommandType.StoredProcedure;
-                objCmd.CommandText = @"[dbo].[PR_RMTS_GET_PICKUP_POINT_ROUTEWISE]";
-                objCmd.Parameters.AddWithValue("@id", id);
+                objCmd.CommandText = @"[dbo].[PR_BRTS_GET_TIMINGS_NOW]";
+                objCmd.Parameters.AddWithValue("@fromID", fromID);
+                objCmd.Parameters.AddWithValue("@toID", toID);
+                objCmd.Parameters.AddWithValue("@time", time);
                 SqlDataReader objSDR = objCmd.ExecuteReader();
                 DataTable dt = new DataTable();
                 dt.Load(objSDR);
@@ -187,30 +193,41 @@ namespace RmtsBrtsApi.Api
         }
         #endregion
 
-        #region GetRmtsPickupRoutewiseRoute
+        #region GetBrtsRouteDetails
         [HttpPost]
-        public HttpResponseMessage GetRmtsPickupRoutewiseRoute([FromBody] FormDataCollection formBody)
+        public HttpResponseMessage GetBrtsRouteDetails([FromBody] FormDataCollection formBody)
         {
             try
             {
                 String ErrorMessage = "";
-                SqlInt32 id = SqlInt32.Null;
+                SqlInt32 fromID = SqlInt32.Null;
+                SqlInt32 toID = SqlInt32.Null;
 
-                if (formBody.GetValues("id") == null)
+                if (formBody.GetValues("fromID") == null)
                 {
-                    ErrorMessage += "id required.";
+                    ErrorMessage += "fromID required.";
                 }
                 else
                 {
-                    id = SqlInt32.Parse(formBody.Get("id").ToString().Trim());
+                    fromID = SqlInt32.Parse(formBody.Get("fromID").ToString().Trim());
+                }
+
+                if (formBody.GetValues("toID") == null)
+                {
+                    ErrorMessage += "toID required.";
+                }
+                else
+                {
+                    toID = SqlInt32.Parse(formBody.Get("toID").ToString().Trim());
                 }
 
                 SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["RmtsConnectionString"].ToString().Trim());
                 objConn.Open();
                 SqlCommand objCmd = objConn.CreateCommand();
                 objCmd.CommandType = CommandType.StoredProcedure;
-                objCmd.CommandText = @"[dbo].[PR_RMTS_GET_PICKUP_POINTWISE_ROUTE]";
-                objCmd.Parameters.AddWithValue("@routeid", id);
+                objCmd.CommandText = @"[dbo].[PR_BRTS_GET_ROUTE_DETAILS]";
+                objCmd.Parameters.AddWithValue("@fromID", fromID);
+                objCmd.Parameters.AddWithValue("@toID", toID);
                 SqlDataReader objSDR = objCmd.ExecuteReader();
                 DataTable dt = new DataTable();
                 dt.Load(objSDR);

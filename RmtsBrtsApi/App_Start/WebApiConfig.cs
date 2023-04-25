@@ -14,7 +14,6 @@ namespace RmtsBrtsApi.App_Start
                 name: "getAllPickupPointsRmts",
                 routeTemplate: "Api/RMTS_BRTS/{controller}/{action}",
                 defaults: new { });
-            
         }
     }
 }
